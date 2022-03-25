@@ -41,11 +41,65 @@ const typeDefs = gql`
     zip: String
   }
 
+  input CreateRestaurantInput {
+    name: String!
+    slug: String!
+    images: CreateRestaurantImageObject
+    menu: CreateRestaurantMenuObject
+    address: CreateRestaurantAddressObj
+    resource: CreateRestaurantImageObject
+  }
+
+  input CreateRestaurantImageObject {
+    thumbnail: String,
+    owner: String,
+    banner: String
+  }
+
+  input CreateRestaurantMenuObject {
+    lunch: [CreateMenuItemObject],
+    dinner: [CreateMenuItemObject]
+  }
+
+  input CreateMenuItemObject {
+    name: String,
+    price: Float
+  }
+
+  input CreateRestaurantAddressObj {
+    street: String,
+    city: String,
+    state: String,
+    zip: String
+  }
+
+  input CreateMenuItemObject {
+    name: String,
+    price: Float
+  }
+
+  union CreateRestaurantResponse = CreateRestaurantSuccess | CreateRestaurantError
+
+  type CreateRestaurantSuccess {
+    restaurant: Restaurant!
+  }
+
+  type CreateRestaurantError {
+    message: String!
+  }
+
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "restaurants" query returns an array of zero or more Restaurant (defined above).
   type Query {
-    restaurants: [Restaurant]
+    restaurants: [Restaurant],
+    restaurantByName(name: String): Restaurant
+  }
+  
+  # The "Mutation" type is special: it lists all of the available mutations
+  # that clients can execute along with the return type of each.
+  type Mutation {
+    createRestaurant(input: CreateRestaurantInput!): CreateRestaurantResponse
   }
 `;
 
@@ -57,7 +111,30 @@ const resolvers = {
       return restaurantData
     },
     restaurantByName: (_, {name}) => {
-      return restaurantData.find(restaurant => restaurant.name == name)
+      return restaurantData.find((restaurant) => restaurant.name == name)
+    }
+  },
+  Mutation: {
+    createRestaurant: (_, {input}) => {
+      if(!input.name || !input.slug) {
+        throw new CreateRestaurantError('Restaurants must have a name and slug')
+      }
+
+      // Create a random id. Let's use Date.now()
+      const _id = Date.now().toString()
+      const restaurant = {
+        ...input,
+        _id
+      }
+      restaurantData.push(restaurant)
+      return {
+        __typename: 'CreateRestaurantSuccess',
+        restaurant: {
+          name: input.name,
+          slug: input.slug,
+          _id
+        }
+      }
     }
   }
 };
