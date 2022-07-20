@@ -41,6 +41,7 @@ const typeDefs = gql`
     zip: String
   }
 
+  # Input types
   input CreateRestaurantInput {
     name: String!
     slug: String!
@@ -104,7 +105,7 @@ const typeDefs = gql`
 `;
 
 // Resolvers define the technique for fetching the types defined in the
-// schema. This resolver retrieves restaurants
+// schema.
 const resolvers = {
   Query: {
     restaurants: () => {
@@ -130,8 +131,7 @@ const resolvers = {
       return {
         __typename: 'CreateRestaurantSuccess',
         restaurant: {
-          name: input.name,
-          slug: input.slug,
+          ...input,
           _id
         }
       }
@@ -143,7 +143,6 @@ module.exports = {
   typeDefs,
   resolvers
 }
-
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
